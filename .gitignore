@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Compile files
+build/*
+
+# Config files
+src/config/config.inc
