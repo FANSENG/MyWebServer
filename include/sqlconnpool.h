@@ -23,19 +23,17 @@ public:
     MYSQL* getConn();
     void freeConn(MYSQL* conn);
     int getFreeCount();
-    int getUserCount();
     void init(const char* host, int port,
               const char* user, const char* psw,
               const char* dbName, int connSize);
     void closePool();
 
 private:
-    SqlConnPool();
+    SqlConnPool() = default;
     ~SqlConnPool();
 
     int MAXCONN;
     int userCount;
-    int freeCount;
 
     std::queue<MYSQL*> pool;
     std::mutex mtx;

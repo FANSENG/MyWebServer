@@ -2,7 +2,8 @@
 C++ WebServer 实战项目。
 
 ## TODO
-- sqlpool
+- http part
+- webserver
 
 ## 实现步骤
 
