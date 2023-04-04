@@ -1,7 +1,12 @@
 //
 // Created by fs1n on 4/2/23.
 //
-
+/**
+ * ===================================
+ * 资源获取即初始化原理
+ * 防止出现资源忘记释放导致的内存泄漏
+ * ===================================
+*/
 #ifndef WEBSERVER_SQLCONNRAII_H
 #define WEBSERVER_SQLCONNRAII_H
 

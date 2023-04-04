@@ -14,7 +14,7 @@ const unordered_map<string, int> HttpRequest::DEFAULT_HTML_TAG{
         {"/login.html", 1}
 };
 
-int HttpRequest::coverHex(char ch) {
+int HttpRequest::converHex(char ch) {
     if(ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
     if(ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
     return ch;
@@ -156,7 +156,7 @@ void HttpRequest::parseFromUrlEncoded() {
         }
     }
     assert(j <= i);
-    if(post_.count(key) == 0 && j < i) {
+    if(post_.find(key) == post_.end() && j < i) {
         value = body_.substr(j, i - j);
         post_[key] = value;
     }
@@ -236,7 +236,7 @@ std::string HttpRequest::version() const {
 
 std::string HttpRequest::getPost(const std::string& key) const {
     assert(key != "");
-    if(post_.count(key) == 1) return post_.find(key)->second;
+    if(post_.find(key) != post_.end()) return post_.find(key)->second;
     return "";
 }
 

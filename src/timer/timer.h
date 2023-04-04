@@ -4,8 +4,15 @@
  * @Description: {To be filled in}
  * @Date: 2023-02-27 19:10:42
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-01 23:40:33
+ * @LastEditTime: 2023-04-04 14:26:58
  */
+/**
+ * =================================
+ * 基于最小堆实现的定时器
+ * 如果 client 未操作时间超过超时时间
+ * 则断开连接
+ * =================================
+*/
 #ifndef TIMER_H
 #define TIMER_H
 
@@ -17,6 +24,7 @@
 #include <functional> 
 #include <assert.h> 
 #include <chrono>
+#include <cmath>
 #include "log.h"
 
 typedef std::function<void()> TimeoutCallback;      // 回调函数
@@ -92,7 +100,8 @@ public:
      * @return {*}
      */    
     void pop();
-    // void getNextTick();
+    
+    int getNextTick();
 private:
     /**
      * @brief 删除 堆&队列中的 index 节点

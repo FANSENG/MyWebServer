@@ -4,12 +4,13 @@
  * @Description: 用于记录日志
  * @Date: 2023-02-27 19:10:12
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-02 10:29:20
+ * @LastEditTime: 2023-04-04 14:18:44
  */
 /**
  * =========================
- * 如果是同步状态，不使用 BlockQueue，生成一个信息就写入文件中
+ * 如果是同步状态，不使用 BlockQueue，生成一个日志就写入文件中
  * 如果是异步状态，有一个线程专门负责写，生成的日志先存储到 BlockQueue 中。
+ * buff只是临时存储的，BlockQueue 会稍久的存储，但最终持久化是由文件实现的
  * =========================
 */
 #ifndef LOG_H
@@ -38,23 +39,44 @@ enum LogLevel{
 // 单例模式
 class Log{
 public:
+
+    /// @brief 初始化 Log 对象
+    /// @param level 日志级别
+    /// @param path 日志路径
+    /// @param suffix 日志后缀
+    /// @param maxQueueCapacity 阻塞队列容量 
     void init(  LogLevel level, 
                 const std::string path = webserver::Config::LOG_PATH, 
                 const std::string suffix = webserver::Config::LOG_SUFFIX,
                 int maxQueueCapacity = webserver::Config::LOG_MAXCAPACITY);
     
+    /// @brief 单例模式，获取 Log*
+    /// @return Log*
     static Log* Instance();
 
+    /// @brief logThread 异步将阻塞队列中数据写入log文件
     static void flushLogThread();
 
+    /// @brief 写日志文件
+    /// @param level 日志级别[INFO, DEBUG, WARN, ERROR]
+    /// @param format 
+    /// @param  
     void write(LogLevel level, const char* format, ...);
 
     void flush();
 
+
+    /// @brief 获取日志级别
+    /// @return 
     LogLevel getLevel();
 
+
+    /// @brief 设置日志级别
+    /// @param level 
     void setLevel(LogLevel level);
 
+    /// @brief 判断日志文件是否打开
+    /// @return 
     bool isOpen();
 
 private:
@@ -62,6 +84,9 @@ private:
     void appendLogLevelTitle(LogLevel level);
     virtual ~Log();
 
+    /// @brief  不断异步写日志，是一个单独的线程
+    ///         在使用 deque->poo(item) 时，如果阻塞队列为空会休眠
+    ///         直到队列中写入数据并且通过 deque->flush() 执行 comsumer.notice_one()
     void asyncWrite();
 
 private:

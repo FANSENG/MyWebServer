@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-04-02 00:33:39
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-02 01:04:38
+ * @LastEditTime: 2023-04-04 15:12:31
  */
 #include "epoller.h"
 
@@ -39,6 +39,9 @@ bool Epoller::delFd(int fd){
 }
 
 int Epoller::wait(int timeoutMs){
+    /// epoll 的文件描述符
+    /// 需要监听的 文件描述符
+    /// 最大监听事件
     return epoll_wait(epollfd, &events[0], maxEvent, timeoutMs);
 }
 

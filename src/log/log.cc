@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-30 20:55:09
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-01 14:08:14
+ * @LastEditTime: 2023-04-04 14:17:19
  */
 #include "log.h"
 
@@ -138,6 +138,8 @@ void Log::write(LogLevel level, const char* format, ...){
         buff.hasWrite(m);
         buff.Append("\n\0", 2);
 
+        // 如果异步且队列未满，则缓存内容存入阻塞队列
+        // 如果队列已满或者非异步，则直接写文件
         if(isAsync && deque && !deque->full()){
             deque->push_back(buff.readAllToString());
         }else{

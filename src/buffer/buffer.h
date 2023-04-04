@@ -4,8 +4,15 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-29 15:03:40
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-01 14:07:22
+ * @LastEditTime: 2023-04-04 14:20:21
  */
+
+/**
+ * ============================
+ * 1. 用于日志缓存
+ * 2. 用于http连接读写缓存
+ * ============================
+*/
 #ifndef BUFFER_H
 #define BUFFER_H
 
@@ -84,17 +91,17 @@ public:
     ssize_t writeFd(int fd, int* Errno);
 
 private:
-    static size_t BUFFER_MAX;
-    char* beginPtr();
-    const char* beginPtrConst() const;
-    void makeSpace(size_t len);
+    static size_t BUFFER_MAX;           // 最大 buffer 数量
+    char* beginPtr();                   // buffer 起始地址
+    const char* beginPtrConst() const;  // buffer 起始地址(const)
+    void makeSpace(size_t len);         // 保证buff能够存储 len 字节数据
     
     std::vector<char> buffer;
     
     /// @brief atomic 是原子对象，不存在数据竞争，是线程安全的
     std::atomic<std::size_t> readPos;
     std::atomic<std::size_t> writePos;
-
+    /// @brief 容量
     std::atomic<std::size_t> capacity;
 };
 

@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-04-02 09:31:17
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-02 10:14:56
+ * @LastEditTime: 2023-04-04 20:01:08
  */
 #include "threadpool.h"
 
@@ -46,9 +46,10 @@ ThreadPool::~ThreadPool(){
 }
 
 template<class F>
-void ThreadPool::AddTask(F&& task){
+void ThreadPool::addTask(F&& task){
     {
         std::lock_guard<std::mutex>(pool->mtx);
+        // 完美转发，保证传递过程中右值引用始终为右值引用
         pool->tasks.emplace(std::forward<F>(task));
     }
     pool->cond.notify_one();

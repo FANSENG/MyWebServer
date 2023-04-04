@@ -1,3 +1,14 @@
+/**
+ * ==================================
+ * server 和 client 连接的对象
+ * 提供接口: 
+ *      1. 读 client 的信息到 readBuff 中
+ *      2. 将 writeBuff 的信息写入 client 中
+ *      3. process函数，处理 readBuff 中的信息(request)，将结果写入 writeBuff(response)
+ *      4. 获取 client 相关信息的 getFd、getPort、getIp、getAddr 等函数
+ *      5. 初始化接口 init
+ * ==================================
+*/
 #ifndef WEBSERVER_HTTPCONN_H
 #define WEBSERVER_HTTPCONN_H
 

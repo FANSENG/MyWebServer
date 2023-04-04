@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-04-01 01:19:26
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-01 22:48:57
+ * @LastEditTime: 2023-04-04 00:46:07
  */
 #include "timer.h"
 
@@ -53,6 +53,13 @@ void HeapTimer::pop(){
     TimeNode tmp = heap.front();
     ref.erase(tmp.id);
     del_(0);
+}
+
+int HeapTimer::getNextTick(){
+    tick();
+    size_t res = -1;
+    if(heap.empty()) return -1;
+    return std::min(0, int(std::chrono::duration_cast<MS>(heap.front().expires - Clock::now()).count()));
 }
 
 void HeapTimer::clear(){
