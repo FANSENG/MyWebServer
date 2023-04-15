@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-04-02 10:15:49
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 14:39:46
+ * @LastEditTime: 2023-04-05 16:45:36
  */
 
 /**
@@ -62,8 +62,8 @@ private:
     int MAXCONN;
     int userCount;
 
-    std::queue<MYSQL*> pool;
-    std::mutex mtx;
+    std::queue<MYSQL*> pool_;
+    std::mutex mtx_;
     sem_t sqlPoolSem;
 };
 

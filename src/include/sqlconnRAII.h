@@ -29,15 +29,15 @@ SqlConnRAII(MYSQL** s, SqlConnPool* connpool){
     // s[MYSQL**] 此值没变，变得是 s 指针指向的地址(同样也是一个指针)
     *s = connpool->getConn();
     sql = *s;
-    pool = connpool;
+    pool_ = connpool;
 }
 
 ~SqlConnRAII(){
-    if(sql) pool->freeConn(sql);
+    if(sql) pool_->freeConn(sql);
 }
 private:
     MYSQL* sql;
-    SqlConnPool* pool;
+    SqlConnPool* pool_;
 };
 
 #endif //WEBSERVER_SQLCONNRAII_H

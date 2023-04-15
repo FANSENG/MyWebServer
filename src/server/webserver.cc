@@ -10,18 +10,16 @@ WebServer::WebServer(
     port_(port), openLinger_(OptLinger), timeoutMS_(timeoutMS), isClose_(false),
     timer_(new HeapTimer()), threadpool_(new ThreadPool(threadNum)), 
     epoller_(new Epoller()){
-        srcDir_ = getcwd(nullptr, 256);
-        assert(srcDir_);
-        strncat(srcDir_, "/resources/", 16);
+        srcDir_ = const_cast<char*>(Config::SOURCE_DIR.c_str());
         HttpConn::userCount = 0;
         HttpConn::srcDir = srcDir_;
-        SqlConnPool::Instance()->init("localhost", sqlPort, sqlUser, sqlPwd, dbName, connPoolNum);
+        SqlConnPool::Instance()->init(Config::SQL_IP.c_str(), sqlPort, sqlUser, sqlPwd, dbName, connPoolNum);
 
         initEventMode_(trigMode);
         if(!initSocket_()) {isClose_ = true;}
 
         if(openLog){
-            Log::Instance()->init(logLevel, "./log", ".log", logQueSize);
+            Log::Instance()->init(logLevel, Config::LOG_PATH.c_str(), Config::LOG_SUFFIX.c_str(), logQueSize);
             if(isClose_) { LOG_ERROR("========== Server init error!=========="); }
             else {
                 LOG_INFO("========== Server init ==========");
@@ -67,7 +65,7 @@ void WebServer::initEventMode_(int trigMode){
 void WebServer::start(){
     // epoll maxwait time, -1 表示无阻塞
     int timeMs = -1;
-    if(!isClose_) LOG_INFO("************Server start************");
+    if(!isClose_) LOG_INFO("==================Server start==================");
     while(!isClose_){
         if(timeoutMS_ > 0){
             timeMs = timer_->getNextTick();
@@ -112,7 +110,7 @@ void WebServer::addClient_(int fd, sockaddr_in addr) {
     assert(fd > 0);
     users_[fd].init(fd, addr);
     if(timeoutMS_ > 0) {
-        timer_->add(fd, timeoutMS_, std::bind(closeConn_, this, &users_[fd]));
+        timer_->add(fd, timeoutMS_, std::bind(&WebServer::closeConn_, this, &users_[fd]));
     }
     epoller_->addFd(fd, EPOLLIN | connEvent_);
     setFdNonblock(fd);

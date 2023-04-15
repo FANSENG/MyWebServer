@@ -1,11 +1,3 @@
-/*
- * @Author: fs1n
- * @Email: fs1n@qq.com
- * @Description: 用于记录日志
- * @Date: 2023-02-27 19:10:12
- * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 14:18:44
- */
 /**
  * =========================
  * 如果是同步状态，不使用 BlockQueue，生成一个日志就写入文件中
@@ -24,7 +16,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <string>
-#include "utils/config.h"
+#include "config.h"
 #include "blockqueue.h"
 #include "buffer.h"
 
@@ -46,9 +38,9 @@ public:
     /// @param suffix 日志后缀
     /// @param maxQueueCapacity 阻塞队列容量 
     void init(  LogLevel level, 
-                const std::string path = webserver::Config::LOG_PATH, 
-                const std::string suffix = webserver::Config::LOG_SUFFIX,
-                int maxQueueCapacity = webserver::Config::LOG_MAXCAPACITY);
+                const char* path = Config::LOG_PATH.c_str(), 
+                const char* suffix = Config::LOG_SUFFIX.c_str(),
+                int maxQueueCapacity = Config::LOG_MAXCAPACITY);
     
     /// @brief 单例模式，获取 Log*
     /// @return Log*
@@ -85,8 +77,8 @@ private:
     virtual ~Log();
 
     /// @brief  不断异步写日志，是一个单独的线程
-    ///         在使用 deque->poo(item) 时，如果阻塞队列为空会休眠
-    ///         直到队列中写入数据并且通过 deque->flush() 执行 comsumer.notice_one()
+    ///         在使用 deque_->poo(item) 时，如果阻塞队列为空会休眠
+    ///         直到队列中写入数据并且通过 deque_->flush() 执行 comsumer.notice_one()
     void asyncWrite();
 
 private:
@@ -107,9 +99,9 @@ private:
     bool isAsync;
 
     FILE* fp;
-    std::unique_ptr<BlockQueue<std::string>> deque;
+    std::unique_ptr<BlockQueue<std::string>> deque_;
     std::unique_ptr<std::thread> writeThread;
-    std::mutex mtx;
+    std::mutex mtx_;
 };
 
 #define LOG_BASE(level, format, ...) \

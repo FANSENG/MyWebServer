@@ -1,18 +1,9 @@
-/*
- * @Author: fs1n
- * @Email: fs1n@qq.com
- * @Description: {To be filled in}
- * @Date: 2023-03-29 15:03:33
- * @LastEditors: fs1n
- * @LastEditTime: 2023-04-01 14:07:49
- */
-
 #include "buffer.h"
 
 // buffer 最大 128kb
 size_t Buffer::BUFFER_MAX = 65535 * 2;
 
-Buffer::Buffer(int initBufferSize): buffer(initBufferSize), capacity(initBufferSize), readPos(0), writePos(0){}
+Buffer::Buffer(int initBufferSize): buffer(initBufferSize), readPos(0), writePos(0){}
 
 size_t Buffer::writeableBytes() const{
     // 获得缓冲区中能直接写的字节数
@@ -28,7 +19,11 @@ size_t Buffer::coverableBytes() const{
     return readPos;
 }
 
-const char* Buffer::readPtr() const{
+char* Buffer::readPtr(){
+    return beginPtr() + readPos;
+}
+
+const char* Buffer::readPtrConst() const{
     return beginPtrConst() + readPos;
 }
 
@@ -40,7 +35,7 @@ void Buffer::ensureWriteable(size_t len){
 }
 
 void Buffer::hasWrite(size_t len){
-    assert(len <= writeableBytes());
+    // assert(len <= writeableBytes());
     writePos += len;
 }
 
@@ -50,20 +45,20 @@ void Buffer::hasRead(size_t len){
 }
 
 void Buffer::readUntil(const char* end){
-    assert((end - beginPtr()) <= readableBytes());
-    hasRead(end - beginPtr());
+    assert(readPtr() < end);
+    hasRead(end - readPtr());
 }
 
 void Buffer::readAll(){
     // 省去置为零的操作，之后直接覆盖即可
     // 读写指针可以保证不会读到之前的数据
-    // bzero((void*)(&buffer), capacity);
+    bzero(&buffer[0], buffer.size());
     readPos = 0;
     writePos = 0;
 }
 
 std::string Buffer::readAllToString(){
-    std::string str(readPtr(), readableBytes());
+    std::string str(readPtrConst(), readableBytes());
     readAll();
     return str;
 }
@@ -80,20 +75,20 @@ void Buffer::Append(const std::string &str){
     Append(str.data(), str.size());
 }
 
-void Buffer::Append(const char* str, size_t len){
-    assert(str);
-    ensureWriteable(len);
-    std::move(str, str + len, writePtrConst());
-    hasWrite(len);
-}
-
 void Buffer::Append(const void* data, size_t len){
     assert(data);
     Append(static_cast<const char*>(data), len);
 }
 
 void Buffer::Append(const Buffer& buff){
-    Append(buff.readPtr(), buff.readableBytes());
+    Append(buff.readPtrConst(), buff.readableBytes());
+}
+
+void Buffer::Append(const char* str, size_t len){
+    assert(str);
+    ensureWriteable(len);
+    std::copy(str, str + len, writePtr());
+    hasWrite(len);
 }
 
 ssize_t Buffer::readFd(int fd, int* Errno){
@@ -109,9 +104,8 @@ ssize_t Buffer::readFd(int fd, int* Errno){
     const ssize_t len = readv(fd, iov, 2);
     if(len < 0){
         *Errno = errno;
-    }else if(static_cast<size_t>(len) < writeable){
+    }else if(static_cast<size_t>(len) <= writeable){
         hasWrite(len);
-        
     }else{
         writePos = buffer.size();
         Append(buff, len - writeable);
@@ -130,22 +124,24 @@ ssize_t Buffer::writeFd(int fd, int* Errno){
 }
 
 char* Buffer::beginPtr(){
-    return &(*buffer.begin());
+    return &*buffer.begin();
 }
 
 const char* Buffer::beginPtrConst() const{
-    return &(*buffer.begin());
+    return &*buffer.begin();
 }
 
 void Buffer::makeSpace(size_t len){
     // 确保缓冲区可以存储此数据
     assert(len <= (BUFFER_MAX - readableBytes()));
     if(writeableBytes() + coverableBytes() >= len){
-        std::move(readPtr(), writePtrConst() - 1, beginPtrConst());
+        std::copy(readPtr(), writePtr(), beginPtr());
         writePos = readableBytes();
         readPos = 0;
     }else{
-        while(capacity <= len && capacity < BUFFER_MAX) capacity = capacity * 2;
+        int capacity = buffer.size();
+        while(capacity <= (len + writePos + 1) && capacity < BUFFER_MAX) capacity <<= 1;
         buffer.resize(capacity);
+        // buffer.resize(writePos + len + 1);
     }
 }

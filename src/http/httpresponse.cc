@@ -23,8 +23,8 @@ const unordered_map<string, string> HttpResponse::SUFFIX_TYPE = {
         { ".avi",   "video/x-msvideo" },
         { ".gz",    "application/x-gzip" },
         { ".tar",   "application/x-tar" },
-        { ".css",   "text/css "},
-        { ".js",    "text/javascript "},
+        { ".css",   "text/css" },
+        { ".js",    "text/javascript" },
 };
 
 const unordered_map<int, string> HttpResponse::CODE_STATUS = {
@@ -58,7 +58,7 @@ void HttpResponse::init(const std::string &srcDir, std::string &path, bool isKee
 }
 
 void HttpResponse::makeResponse(Buffer &buff) {
-    if(stat((srcDir_ + path_).c_str(), &mmFileStat_) < 0 || S_ISDIR(mmFileStat_.st_mode)){
+    if(stat((srcDir_ + path_).data(), &mmFileStat_) < 0 || S_ISDIR(mmFileStat_.st_mode)){
         code_ = 404;
     }
     else if(!(mmFileStat_.st_mode & S_IROTH)) {
@@ -70,7 +70,7 @@ void HttpResponse::makeResponse(Buffer &buff) {
     errorHtml_();
     addStateLine_(buff);
     addHeader_(buff);
-    addContent(buff);
+    addContent_(buff);
 }
 
 char* HttpResponse::file() {
@@ -84,7 +84,7 @@ size_t HttpResponse::fileLen() const {
 void HttpResponse::errorHtml_() {
     if(CODE_PATH.find(code_) != CODE_PATH.end()){
         path_ = CODE_PATH.find(code_)->second;
-        stat((srcDir_ + path_).c_str(), &mmFileStat_);
+        stat((srcDir_ + path_).data(), &mmFileStat_);
     }
 }
 
@@ -111,18 +111,18 @@ void HttpResponse::addHeader_(Buffer& buff) {
     buff.Append("Content-type: " + getFileType_() + "\r\n");
 }
 
-void HttpResponse::addContent(Buffer &buff) {
-    int srcFd = open((srcDir_ + path_).c_str(), O_RDONLY);
+void HttpResponse::addContent_(Buffer &buff) {
+    int srcFd = open((srcDir_ + path_).data(), O_RDONLY);
     if(srcFd < 0){
         errorContent(buff, "File NotFound!");
         return;
     }
 
-    LOG_DEBUG("file path: %s", (srcDir_ + path_).c_str());
+    LOG_DEBUG("file path: %s", (srcDir_ + path_).data());
     // 将文件读取到内存中
     // PORT_READ : 可以被读取
     // MAP_PRIVATE : 建设一个写时复制的私有映射空间
-    int *mmRet = (int*) mmap(nullptr, mmFileStat_.st_size, PROT_READ, MAP_PRIVATE, srcFd, 0);
+    int *mmRet = (int*)mmap(0, mmFileStat_.st_size, PROT_READ, MAP_PRIVATE, srcFd, 0);
     if(*mmRet == -1){
         errorContent(buff, "File NotFound!");
         return;
@@ -148,7 +148,7 @@ string HttpResponse::getFileType_() {
     return SUFFIX_TYPE.find(suffix) == SUFFIX_TYPE.end() ? "text/plain" : SUFFIX_TYPE.find(suffix)->second;
 }
 
-void HttpResponse::errorContent(Buffer &buff, const std::string& message) const {
+void HttpResponse::errorContent(Buffer &buff, string message) {
     string body;
     string status;
     status = CODE_STATUS.find(code_) == CODE_STATUS.end() ? "Bad Request" : CODE_STATUS.find(code_)->second;

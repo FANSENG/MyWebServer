@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-29 15:03:40
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 14:20:21
+ * @LastEditTime: 2023-04-05 15:21:38
  */
 
 /**
@@ -43,7 +43,11 @@ public:
 
     /// @brief 获取可读数据首地址
     /// @return 
-    const char* readPtr() const;
+    char* readPtr();
+
+    /// @brief 获取可读数据首地址
+    /// @return 
+    const char* readPtrConst() const;
 
     /// @brief 确保可写空间大于等于len 空间不足会去扩容
     /// @param len 
@@ -101,8 +105,6 @@ private:
     /// @brief atomic 是原子对象，不存在数据竞争，是线程安全的
     std::atomic<std::size_t> readPos;
     std::atomic<std::size_t> writePos;
-    /// @brief 容量
-    std::atomic<std::size_t> capacity;
 };
 
 

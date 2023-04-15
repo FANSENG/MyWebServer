@@ -47,7 +47,7 @@ public:
     /// @brief 构造 error 返回内容， 写入 buff 中
     /// @param buff 
     /// @param message 
-    void errorContent(Buffer &buff, const std::string& message) const;
+    void errorContent(Buffer &buff, std::string message);
 
     /// @brief 获取 状态码
     /// @return 
@@ -64,7 +64,7 @@ private:
 
     /// @brief 添加 response content
     /// @param buff 
-    void addContent(Buffer &buff);
+    void addContent_(Buffer &buff);
 
     /// @brief 根据 code 读取 对应的html信息到 mmFileStat_
     void errorHtml_();

@@ -4,7 +4,7 @@
  * @Description: {To be filled in}P
  * @Date: 2023-04-01 23:46:52
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 15:13:52
+ * @LastEditTime: 2023-04-05 15:29:04
  */
 /**
  * ===================================================
@@ -64,8 +64,7 @@ public:
 
 
 private:
-    int epollfd;
-    int maxEvent;
+    int epollfd_;
     std::vector<epoll_event> events;
 };
 

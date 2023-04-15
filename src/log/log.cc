@@ -4,42 +4,41 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-30 20:55:09
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 14:17:19
+ * @LastEditTime: 2023-04-05 00:05:00
  */
 #include "log.h"
 
 Log::Log():lineCount(0), isAsync(false), writeThread(nullptr),
-                      deque(nullptr), logLastDay(0), fp(nullptr) {}
+                      deque_(nullptr), logLastDay(0), fp(nullptr) {}
 
 Log::~Log(){
     if(writeThread && writeThread->joinable()){
         // 先记录完所有的日志
-        while(!deque->empty()){
-            deque->flush();
+        while(!deque_->empty()){
+            deque_->flush();
         }
-        deque->close();
+        deque_->close();
         writeThread->join();
     }
     // 文件打开了
     if(fp){
-        std::lock_guard<std::mutex>(this->mtx);
+        std::lock_guard<std::mutex> locker(this->mtx_);
         flush();
         fclose(fp);
     }
 }
 
-void Log::init(LogLevel level, const std::string path, const std::string suffix, int maxQueueCapacity){
+void Log::init(LogLevel level, const char* path, const char* suffix, int maxQueueCapacity){
     open = true;
     this->level = level;
     if(maxQueueCapacity > 0){
         isAsync = true;
-        if(!deque){
-            std::unique_ptr<BlockQueue<std::string>> newDeque(new BlockQueue<std::string>());
-            deque = move(newDeque);
+        if(!deque_){
+            std::unique_ptr<BlockQueue<std::string>> newDeque(new BlockQueue<std::string>);
+            deque_ = move(newDeque);
             std::unique_ptr<std::thread> newThread(new std::thread(flushLogThread));
             writeThread = move(newThread);
         }
-        deque->clear();
     }else{
         isAsync = false;
     }
@@ -49,15 +48,15 @@ void Log::init(LogLevel level, const std::string path, const std::string suffix,
     time_t timer = time(nullptr);
     struct tm *sysTime = localtime(&timer);
     struct tm t = *sysTime;
-    this->path = path.c_str();
-    this->suffix = suffix.c_str();
+    this->path = path;
+    this->suffix = suffix;
     char fileName[LOG_NAME_LEN] = {0};
     snprintf(fileName, LOG_NAME_LEN - 1, "%s/%04d_%02d_%02d%s",
-    path, t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, suffix);
+            path, t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, suffix);
     logLastDay = t.tm_mday;
 
     {
-        std::lock_guard<std::mutex>(this->mtx);
+        std::lock_guard<std::mutex> locker(this->mtx_);
         buff.readAll();
         if(fp){
             flush();
@@ -93,7 +92,7 @@ void Log::write(LogLevel level, const char* format, ...){
     // 新一天的日志 或者 日志文件满了
     if(logLastDay != t.tm_mday || (lineCount && (lineCount % MAX_LEN) == 0)){
         // 此锁的作用域被 if 包裹
-        std::unique_lock<std::mutex> locker(this->mtx);
+        std::unique_lock<std::mutex> locker(this->mtx_);
         locker.unlock();
 
         char newFile[LOG_NAME_LEN];
@@ -123,7 +122,7 @@ void Log::write(LogLevel level, const char* format, ...){
 
 
     {
-        std::unique_lock<std::mutex> locker(mtx);
+        std::unique_lock<std::mutex> locker(mtx_);
         lineCount++;
         int n = snprintf(buff.writePtr(), 128, "%d-%02d-%02d %02d:%02d:%02d.%06ld ",
                     t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
@@ -140,10 +139,10 @@ void Log::write(LogLevel level, const char* format, ...){
 
         // 如果异步且队列未满，则缓存内容存入阻塞队列
         // 如果队列已满或者非异步，则直接写文件
-        if(isAsync && deque && !deque->full()){
-            deque->push_back(buff.readAllToString());
+        if(isAsync && deque_ && !deque_->full()){
+            deque_->push_back(buff.readAllToString());
         }else{
-            fputs(buff.readPtr(), fp);
+            fputs(buff.readPtrConst(), fp);
         }
         buff.readAll();
     }
@@ -151,23 +150,23 @@ void Log::write(LogLevel level, const char* format, ...){
 
 void Log::flush(){
     if(isAsync){
-        deque->flush();
+        deque_->flush();
     }
     fflush(fp);
 }
 
 LogLevel Log::getLevel(){
-    std::lock_guard<std::mutex>(this->mtx);
+    std::lock_guard<std::mutex> locker(this->mtx_);
     return level;
 }
 
 void Log::setLevel(LogLevel level){
-    std::lock_guard<std::mutex>(this->mtx);
+    std::lock_guard<std::mutex> locker(this->mtx_);
     this->level = level;
 }
 
 bool Log::isOpen(){
-    std::lock_guard<std::mutex>(this->mtx);
+    std::lock_guard<std::mutex> locker(this->mtx_);
     return open;
 }
 
@@ -194,8 +193,8 @@ void Log::appendLogLevelTitle(LogLevel level){
 
 void Log::asyncWrite(){
     std::string str;
-    while(deque->pop(str)){
-        std::lock_guard<std::mutex>(this->mtx);
+    while(deque_->pop(str)){
+        std::lock_guard<std::mutex> locker(this->mtx_);
         fputs(str.c_str(), fp);
     }
 }

@@ -40,11 +40,11 @@ bool HttpRequest::parse(Buffer &buff) {
     if(buff.readableBytes() <= 0) return false;
     while(buff.readableBytes() && state_ != PARSE_STATE::FINISH){
         // 在 buff 中寻找以 CRLF
-        const char* lineEnd = search(buff.readPtr(), buff.writePtrConst(), CRLF, CRLF + 2);
-        std::string line(buff.readPtr(), lineEnd);
+        const char* lineEnd = search(buff.readPtrConst(), buff.writePtrConst(), CRLF, CRLF + 2);
+        std::string line(buff.readPtrConst(), lineEnd);
         switch (state_) {
             case REQUEST_LINE:
-                // 确保是完整行
+                // 确保请求行正确
                 if(!parseRequestLine(line)) return false;
                 parsePath();
                 break;
@@ -165,8 +165,9 @@ void HttpRequest::parseFromUrlEncoded() {
 bool HttpRequest::userVerify(const std::string& name, const std::string& pwd, bool isLogin){
     if(name == "" || pwd == "") { return false; }
     LOG_INFO("Verify name:%s pwd:%s", name.c_str(), pwd.c_str());
-    MYSQL* sql;
-    SqlConnRAII(&sql, SqlConnPool::Instance());
+    MYSQL** tosql;
+    SqlConnRAII sqlRaII(tosql, SqlConnPool::Instance());
+    MYSQL* sql = *tosql;
     assert(sql);
 
     bool flag = false;

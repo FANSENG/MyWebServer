@@ -79,14 +79,14 @@ bool HttpConn::process() {
     request_.init();
     if(readBuff_.readableBytes() <= 0) return false;
     else if(request_.parse(readBuff_)){     // 解析请求行
-        LOG_DEBUG("Get File: %s", request_.path().c_str());
+        LOG_DEBUG("Get request: %s", request_.path().c_str());
         response_.init(srcDir, request_.path(), request_.isKeepAlive(), 200);
     }else{
         response_.init(srcDir, request_.path(), false, 400);
     }
 
     response_.makeResponse(writeBuff_);
-    iov_[0].iov_base = const_cast<char*>(writeBuff_.readPtr());
+    iov_[0].iov_base = const_cast<char*>(writeBuff_.readPtrConst());
     iov_[0].iov_len = writeBuff_.readableBytes();
     iovCnt_ = 1;
 

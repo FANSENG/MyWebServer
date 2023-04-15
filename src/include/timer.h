@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-02-27 19:10:42
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-04 14:26:58
+ * @LastEditTime: 2023-04-05 16:32:34
  */
 /**
  * =================================
@@ -56,7 +56,7 @@ struct TimeNode{
 
 class HeapTimer{
 public:
-    HeapTimer(){ heap.reserve(64); }
+    HeapTimer(){ heap_.reserve(64); }
     ~HeapTimer(){ clear(); }
 
     /**
@@ -134,8 +134,8 @@ private:
     void swapNode_(size_t index1, size_t index2);
 
 private:
-    std::vector<TimeNode> heap;             // 计时器，每一个对应一个 Client
-    std::unordered_map<int, size_t> ref;    // TimeNode.id -> index in heap
+    std::vector<TimeNode> heap_;             // 计时器，每一个对应一个 Client
+    std::unordered_map<int, size_t> ref_;    // TimeNode.id -> index in heap_
 };
 
 #endif // TIMER_H

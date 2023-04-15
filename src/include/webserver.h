@@ -27,7 +27,8 @@
 #include "sqlconnpool.h"
 #include "threadpool.h"
 #include "sqlconnRAII.h"
-#include "../http/httpconn.h"
+#include "httpconn.h"
+#include "config.h"
 
 class WebServer {
 public:
@@ -111,6 +112,8 @@ private:
     std::unique_ptr<HeapTimer> timer_;
     std::unique_ptr<ThreadPool> threadpool_;
     std::unique_ptr<Epoller> epoller_;
+
+    // fd -> HttpConn
     std::unordered_map<int, HttpConn> users_;
 };
 #endif //WEBSERVER_WEBSERVER_H
