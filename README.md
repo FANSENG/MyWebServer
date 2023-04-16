@@ -7,29 +7,45 @@ C++ WebServer 实战项目。
 ![](resources/images/WebServer.png)
 
 - Epoller
-  - TODO
+  - 对 epoll 进行包装。epoll 设计是为了代替 select，时间复杂度为 `O(1)`，适用于高并发场景，且支持大量文件描述符注册。select 和 pool 都是监听文件描述符list，进行线性查找，复杂度为 `O(N)`，epoll 使用了内核文件级别的回调机制，所以复杂度为 `O(1)`。
+  - epoller 使用对 `epoll_create` `epoll_ctl` `epoll_wait` 进行了包装。
+    - `epoll_create` : 创建 epoll 实例，返回其文件描述符。
+    - `epoll_ctl` : 添加对文件描述符某个事件的监听、修改对文件描述符监听的事件、删除对文件描述符的监听。根据传入的option决定如何操作。
+    - `epoll_wait` : 等待 epoll 监听的文件描述符发生对应的监听事件，返回值为发生事件的描述符数量，按顺序存储到传入的地址中。
+    - epoll分为 **边缘触发ET** 和 **水平触发 LT**。使用边沿触发时要保证每次读写都是完整的，不能读一半的数据，因为还存在数据可读，但此部分数据不会导致产生 EPOLLIN 事件。
+      - LT : 如果监听的是可读，只要有存在可读数据就会一直产生 EPOLLIN 事件。监听可写，如果处于可写状态就会一直产生 EPOLLOUT 事件。
+      - ET : 如果监听的是可读，当从 无数据 到 有可读数据 状态时会产生 EPOLLIN 事件。监听可写，当从不可写状态 到 可写状态 就会产生 EPOLLOUT 事件。
 - Timer
-  - TODO
+  - 计时器，对于每个连接服务器的 client 设置服务时间，超时自动断开连接，基于最小堆实现。
+  - 设置有两个数据结构，一个 `vector<TimeNode>` 用于存储堆，一个 `unordered_map<int, size_t>` 用于存储 `TimeNode.id` 到 堆中索引的映射，以实现 `O(1)` 访问。`TimeNode.id` 是对应 client 的文件描述符。
+  - TimeNode 包含 client文件描述符、超时时间 和 回调函数。
+    - 回调函数 : 实际使用时需要通过 `std::bind` 来传入函数(因为需要传入参数)，如`std::bind(&WebServer::closeConn_, this, &users_[fd])`。本项目回调函数用于超时后关闭连接。
 - Buffer
-  - TODO
+  - 用于缓冲日志、request解析结果 和 response结果。相当于大号的 String，相关函数比较简单，需要注意的是读写指针需要考虑线程安全，使用 `std::atomic` 包裹避免数据竞争。
 - BlockQueue
-  - TODO
+  - 用于异步写日志，当其他线程调用写日志时，写的内容会被放入阻塞队列中(阻塞队列有空的情况下)，然后由写日志线程异步写入文件中，异步队列可以减少IO次数，提高性能。
+  - BlockQueue 服务于多线程(其他线程写日志和将日志写入文件)，需要设置锁，锁的竞争主要出现在`push` 和 `pop`上。在使用锁时推荐使用 `lock_guard` 上锁，不会出现忘记解锁的问题。并且使用条件变量和消费者生产者模型，而不是使用自旋锁，避免忙等待占用CPU资源。
 - Log
-  - TODO
+  - 提供不同级别写日志的接口，支持异步写和同步写，单例模式，只提供一个Log对象。在这里要区分清楚几个 `flush` 函数。
 - 线程池
-  - TODO
-- MYSQL 连接池
-  - TODO
+  - 通过线程池管理线程资源，需要留意的是设置了最大线程数N，在一开始就会启动N个线程，并不断等待任务到来。新增任务放入任务队列中，由N个线程竞争，线程等待任务时挂起，通过条件变量唤醒，同样的生产者消费者模型。
+- MYSQL 连接池&RAII
+  - 通过资源池管理Mysql连接，同样在init时就会申请所有连接，当有请求时分配连接，使用资源池会减少不断申请断开连接导致的性能损失。为了避免工作线程申请连接后忘记释放连接，获取连接时要通过RAII获取。
 - HttpConn
-  - TODO
+  - 保存 Client 信息，调用 HttpRequest 和 HttpResponse，解析出 client 发来的请求，然后生成需要回应的信息，最后发送给client，主要使用的函数是`process`。
 - HttpRequest
-  - TODO
+  - 对 client 发来的 request 进行解析，分为 解析请求行、解析路径、解析请求头、解析请求体，解析最好使用正则表达式解析。
+    - 解析请求行 : 获取 请求的方法(GET|POST)、HTTP版本、请求路径等信息。
+    - 解析路径 : 通过 URL 得出请求的文件。如 / => index.html /login => login.html
+    - 解析请求头 : 获取请求头中的信息，如是否为长连接。
+    - 解析请求体 : 适用于POST方法。
 - HttpResponse
-  - TODO
+  - 根据从Request解析出的信息构造Response。构造过程没有太多难度，但是需要搞清楚Http Response的格式。
+  - 如果需要 Response 文件，则先要将文件读取到内存中，然后获取文件的长度和文件在内存中的起始地址。
 - WebServer
-  - TODO
+  - Server 端，负责设置一些服务端参数，启动、监听服务，当 epoll_wait 返回时，遍历所有响应的事件，根据event 和 fd 决定如何处理(连接、读、写)。
 
-## 推荐实现步骤
+## 推荐实现顺序
 
 1. 实现 阻塞队列
 2. 实现 日志

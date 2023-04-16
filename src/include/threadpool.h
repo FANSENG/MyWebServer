@@ -16,6 +16,8 @@
 #include <functional>
 #include <cassert>
 
+// 其实这个线程池最好也用单例模式
+// 只返回一个可操作ThreadPool的指针
 class ThreadPool{
 public:
     /// @brief explicit 表示禁止隐式转换类型，threadCount 类型必须为 size_t

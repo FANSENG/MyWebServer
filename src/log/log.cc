@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-30 20:55:09
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-05 00:05:00
+ * @LastEditTime: 2023-04-16 16:04:27
  */
 #include "log.h"
 
@@ -111,9 +111,8 @@ void Log::write(LogLevel level, const char* format, ...){
         }
         locker.lock();
         
-        // 此时log文件已经满了，不能继续将阻塞队列中的内容写入文件
-        // 所以只能去清楚文件缓冲区
-        // flush();
+        // 将文件在内存中的缓存写入文件中
+        // 要创建新的日志文件，保证旧日志文件完整
         fflush(fp);
         fclose(fp);
         fp = fopen(newFile, "a");

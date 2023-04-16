@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-04-02 10:15:49
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-05 16:45:36
+ * @LastEditTime: 2023-04-16 17:04:23
  */
 
 /**
@@ -33,7 +33,7 @@ public:
     /// @return 
     MYSQL* getConn();
 
-    /// @brief 释放连接
+    /// @brief 释放连接，实际上是把此连接放回资源池，并不会断开
     /// @param conn 
     void freeConn(MYSQL* conn);
 

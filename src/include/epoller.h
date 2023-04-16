@@ -4,7 +4,7 @@
  * @Description: {To be filled in}P
  * @Date: 2023-04-01 23:46:52
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-05 15:29:04
+ * @LastEditTime: 2023-04-16 15:12:16
  */
 /**
  * ===================================================
@@ -64,8 +64,8 @@ public:
 
 
 private:
-    int epollfd_;
-    std::vector<epoll_event> events;
+    int epollfd_;                       // epoll 的文件描述符
+    std::vector<epoll_event> events;    // 传递指针存储 epoll_wait 返回的发生事件的文件描述符
 };
 
 #endif // EPOLLER_H
