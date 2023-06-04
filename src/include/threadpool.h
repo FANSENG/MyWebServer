@@ -31,9 +31,10 @@ public:
                 while(true){
                     // 有任务进入if分支
                     if(pool->isClose_) break; 
-                    else if(!pool->tasks.empty()){
+                    if(!pool->tasks.empty()){
                         // 从队列取出 task
-                        auto task = move(pool->tasks.front());
+                        // 这里使用了移动赋值，
+                        auto task = std::move(pool->tasks.front());
                         pool->tasks.pop();
 
                         locker.unlock();

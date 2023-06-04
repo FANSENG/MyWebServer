@@ -45,7 +45,29 @@ C++ WebServer 实战项目。
 - WebServer
   - Server 端，负责设置一些服务端参数，启动、监听服务，当 epoll_wait 返回时，遍历所有响应的事件，根据event 和 fd 决定如何处理(连接、读、写)。
 
-## 推荐实现顺序
+## 测试笔记
+
+查看网上资料，大部分人测试此使用的工具是[WebBench](https://github.com/EZLippi/WebBench)，但本人经过测试后发现[wrk](https://github.com/wg/wrk)测试起来更加方便，给出的指标更直观。
+- 测试环境：2核CPU、4GB内存、6Mbps腾讯云服务器
+
+关于wrk的使用网络上有很多教程，这里贴两个比较好的博客。
+  1. https://www.jianshu.com/p/686233ca909e
+  2. https://blog.csdn.net/cnhome/article/details/128047616
+
+在测试时首先通过公网IP进行了测试，后来发现不论如何调整，QPS都是140左右，而且此时CPU、IO均不处于繁忙状态，因此并不是CPU和IO限制了QPS，然后发现网络带宽峰值已经达到6Mbps，推测是网络限制了QPS。
+![](test/testImg/公网400client2线程.png)
+![](test/testImg/公网带宽.png)
+并通过反向计算，发现30s测试中网络平均带宽大约为3.6Mbps，猜测是后期网络挤兑导致大量请求超时，没有达到6Mbps。
+
+
+既然知道了是网络限制了QPS，那我们直接在服务器通过localhost去测试就可以了，能够不受公网带宽的限制，测试结果如下，可以发现和上方相比其他参数没有变化，QPS达到了近1000。
+![](test/testImg/内网400client2线程.png)
+
+继续查看资源使用情况如下图，发现硬盘IO限制了请求，并发量高时，发起一个IO请求，实际只有20%的时间是执行IO的过程，其余80%均在等待。同时发现CPU也限制了并发量，在测试时CPU最高利用率达到了98.799%。此时CPU和磁盘IO限制了QPS提高。
+![](test/testImg/CPU利用率.png)
+![](test/testImg/磁盘IO繁忙比.png)
+
+## 项目推荐实现顺序
 
 1. 实现 阻塞队列
 2. 实现 日志
@@ -56,3 +78,8 @@ C++ WebServer 实战项目。
 7. 实现 epoller
 8. 实现 http 相关
 9. 实现 webserver
+
+## 未来优化
+1. 更改网络架构为主从Reactor模式。
+2. 加入内存池技术。
+3. 日志部分使用双缓冲区，避免数据竞争问题。

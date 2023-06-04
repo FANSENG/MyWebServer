@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-30 20:55:09
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-16 16:04:27
+ * @LastEditTime: 2023-06-01 02:14:23
  */
 #include "log.h"
 
@@ -35,9 +35,9 @@ void Log::init(LogLevel level, const char* path, const char* suffix, int maxQueu
         isAsync = true;
         if(!deque_){
             std::unique_ptr<BlockQueue<std::string>> newDeque(new BlockQueue<std::string>);
-            deque_ = move(newDeque);
+            deque_ = std::move(newDeque);
             std::unique_ptr<std::thread> newThread(new std::thread(flushLogThread));
-            writeThread = move(newThread);
+            writeThread = std::move(newThread);
         }
     }else{
         isAsync = false;

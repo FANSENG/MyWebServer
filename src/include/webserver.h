@@ -56,15 +56,15 @@ private:
     void addClient_(int fd, sockaddr_in addr);
 
     /// @brief 处理监听端口，将申请连接的 client 添加到 user_ 和 epoll 中
-    void dealListen_();
+    void listenProcessor_();
 
     /// @brief 通过线程池单独分配一个线程去处理 写 client 的任务
     /// @param client 
-    void dealWrite_(HttpConn* client);
+    void writeProcessor_(HttpConn* client);
 
     /// @brief 通过线程池单独分配一个线程去处理 读 client 的任务
     /// @param client 
-    void dealRead_(HttpConn* client);
+    void readProcessor_(HttpConn* client);
 
     /// @brief 发送 info 到 fd，发送信息为错误信息，发送完成后会关闭连接
     /// @param fd 

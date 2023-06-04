@@ -4,13 +4,12 @@
  * @Description: {To be filled in}
  * @Date: 2023-02-27 19:11:31
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-15 17:57:23
+ * @LastEditTime: 2023-05-31 18:10:10
  */
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <string>
-#include "log.h"
 
 namespace Config{
     // LOG

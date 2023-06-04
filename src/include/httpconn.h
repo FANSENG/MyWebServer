@@ -83,8 +83,8 @@ public:
     sockaddr_in getAddr() const;
 
     /**
-     * @brief 处理连接
-     * @return {*}
+     * @brief 处理client请求，针对其请求构造 response 体
+     * @return 是否完成 response 的构造
      */
     bool process();
 

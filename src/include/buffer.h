@@ -4,7 +4,7 @@
  * @Description: {To be filled in}
  * @Date: 2023-03-29 15:03:40
  * @LastEditors: fs1n
- * @LastEditTime: 2023-04-05 15:21:38
+ * @LastEditTime: 2023-06-03 14:20:02
  */
 
 /**
@@ -26,7 +26,7 @@
 
 class Buffer {
 public:
-    Buffer(int initBufferSize = 1024);
+    Buffer(int initBufferSize = 10240);
     ~Buffer() = default;
 
     /// @brief 可写字节数

@@ -93,7 +93,7 @@ bool HttpConn::process() {
     if(response_.fileLen() > 0 && response_.file()){
         iov_[1].iov_base = response_.file();
         iov_[1].iov_len = response_.fileLen();
-        iovCnt_ = 2;
+        iovCnt_++;
     }
     LOG_DEBUG("filesize:%d, %d  to %d", response_.fileLen() , iovCnt_, toWriteBytes());
     return true;

@@ -74,17 +74,18 @@ void WebServer::start(){
         for(int i = 0; i < eventCnt; i++){
             int fd = epoller_->getEvnetFd(i);
             uint32_t events = epoller_->getEvnets(i);
+            // Handler
             if(fd == listenFd_){
-                dealListen_();
+                listenProcessor_();
             }else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)){
                 assert(users_.find(fd) != users_.end());
                 closeConn_(&users_[fd]);
             }else if(events & EPOLLIN){
                 assert(users_.find(fd) != users_.end());
-                dealRead_(&users_[fd]);
+                readProcessor_(&users_[fd]);
             }else if(events & EPOLLOUT){
                 assert(users_.find(fd) != users_.end());
-                dealWrite_(&users_[fd]);
+                writeProcessor_(&users_[fd]);
             }else LOG_ERROR("Unexpected event");
         }
     }
@@ -117,7 +118,7 @@ void WebServer::addClient_(int fd, sockaddr_in addr) {
     LOG_INFO("Client[%d] in!", users_[fd].getFd());
 }
 
-void WebServer::dealListen_() {
+void WebServer::listenProcessor_() {
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
     do {
@@ -132,13 +133,13 @@ void WebServer::dealListen_() {
     } while(listenEvent_ & EPOLLET);
 }
 
-void WebServer::dealRead_(HttpConn* client) {
+void WebServer::readProcessor_(HttpConn* client) {
     assert(client);
     extentTime_(client);
     threadpool_->addTask(std::bind(&WebServer::onRead_, this, client));
 }
 
-void WebServer::dealWrite_(HttpConn* client) {
+void WebServer::writeProcessor_(HttpConn* client) {
     assert(client);
     extentTime_(client);
     threadpool_->addTask(std::bind(&WebServer::onWrite_, this, client));
